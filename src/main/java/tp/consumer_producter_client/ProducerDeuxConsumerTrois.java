@@ -1,5 +1,6 @@
 package tp.consumer_producter_client;
 
+import org.apache.kafka.clients.consumer.CommitFailedException;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.Callback;
@@ -44,12 +45,21 @@ public class ProducerDeuxConsumerTrois implements Runnable {
                 ConsumerRecords<String, String> records = consumer.poll(100);
                 if(records != null && !records.isEmpty()){
                     attendReponse = false;
-                    System.out.println("\n\n-----------Réponse-----------");
-                    records.forEach(message -> {
-                        System.out.println(message.toString());
-                    });
+                    System.out.println("\n-----------Réponse-----------");
+                    System.out.println(records.iterator().next().value());
+//                    records.forEach(message -> {
+//
+//                    });
+                    try{
+                        //force le commit de l'offset du message sur le bus
+                        consumer.commitSync();
+                    } catch(CommitFailedException e){
+                        e.printStackTrace();
+                    }
+                    records = null;
                 }
             }
+            System.out.println("------------------");
 
         }
         scanner.close();
