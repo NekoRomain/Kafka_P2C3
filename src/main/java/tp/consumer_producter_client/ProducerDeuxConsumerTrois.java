@@ -9,6 +9,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
 import java.io.Console;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.Scanner;
 
@@ -42,20 +43,26 @@ public class ProducerDeuxConsumerTrois implements Runnable {
             attendReponse = true;
             System.out.println("-----------En attente de réponse-----------");
             while (attendReponse){
-                ConsumerRecords<String, String> records = consumer.poll(100);
+                ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
                 if(records != null && !records.isEmpty()){
                     attendReponse = false;
                     System.out.println("\n-----------Réponse-----------");
-                    System.out.println(records.iterator().next().value());
-//                    records.forEach(message -> {
-//
-//                    });
-                    try{
+//                    System.out.println(records.iterator().next().value());
+//                    try{
+//                        //force le commit de l'offset du message sur le bus
+//                        consumer.commitSync();
+//                    } catch(CommitFailedException e){
+//                        e.printStackTrace();
+//                    }
+                    records.forEach(stringStringConsumerRecord -> {
+                        System.out.println(stringStringConsumerRecord.value());
+                        try{
                         //force le commit de l'offset du message sur le bus
-                        consumer.commitSync();
-                    } catch(CommitFailedException e){
-                        e.printStackTrace();
-                    }
+                            consumer.commitSync();
+                        } catch(CommitFailedException e){
+                            e.printStackTrace();
+                        }
+                    });
                     records = null;
                 }
             }
@@ -63,6 +70,8 @@ public class ProducerDeuxConsumerTrois implements Runnable {
 
         }
         scanner.close();
+        producer.close();
+        consumer.close();
     }
 
     private class ProducerCallBack implements Callback {
